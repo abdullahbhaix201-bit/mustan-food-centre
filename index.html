@@ -367,6 +367,7 @@
     // ========== DATA ==========
     const DELIVERY_FEE = 150;
     const WHATSAPP_NUMBER = "923252632632"; // 0325-2632632
+    const MAKE_WEBHOOK = "https://hook.us2.make.com/fnicf4ajbr6j87vaau88aqcf6xap2llo";
     // Ordering hours: 5:00 PM – 1:00 AM (overnight)
     const OPEN_HOUR = 17;   // 5:00 PM
     const CLOSE_HOUR = 1;   // 1:00 AM
@@ -422,7 +423,7 @@
       },
       sandwich: {
         title: "Sandwiches",
-        img: "assets/sandwich.png",
+        img: "assets/cat-sandwich.jpg",
         items: [
           { name: "Chicken Sandwich", price: 400 },
           { name: "Club Sandwich", price: 450 },
@@ -435,7 +436,7 @@
       },
       broast: {
         title: "Broast",
-        img: "assets/broast.png",
+        img: "assets/cat-broast.jpg",
         items: [
           { name: "Chest Broast", price: 540 },
           { name: "Leg Broast", price: 470 },
@@ -459,7 +460,7 @@
       },
       fries: {
         title: "Fries",
-        img: "assets/deal9.jpg",
+        img: "assets/fries-cat.jpg",
         items: [
           { name: "Plain Fries", price: 250 },
           { name: "Masala Fries", price: 250 },
@@ -551,7 +552,7 @@
       },
       platter: {
         title: "Platters",
-        img: "assets/platter.png",
+        img: "assets/cat-platter.jpg",
         items: [
           { name: "Bar BBQ Platter (2 Persons)", price: 2400 },
           { name: "Bar BBQ Platter (4 Persons)", price: 3400 },
@@ -560,7 +561,7 @@
       },
       extras: {
         title: "Extras & Beverages",
-        img: "assets/extras.png",
+        img: "assets/cat-extras.jpg",
         items: [
           { name: "Chapati", price: 30 },
           { name: "Dip Sauce", price: 50 },
@@ -780,6 +781,45 @@
       lines.push('══════════════════════════');
 
       const msg = lines.join('\n');
+
+      // Order payload for Make.com webhook
+      const orderPayload = {
+        order_number: '#' + orderNo,
+        order_no: orderNo,
+        datetime: timeStr,
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: address,
+        payment_method: payment,
+        items: cart.map(function(item) {
+          return {
+            name: item.name,
+            quantity: item.qty,
+            price: item.price,
+            line_total: item.price * item.qty
+          };
+        }),
+        items_text: cart.map(function(item) {
+          return item.name + ' x' + item.qty + ' = Rs. ' + (item.price * item.qty);
+        }).join('\n'),
+        subtotal: subtotal,
+        delivery_fee: DELIVERY_FEE,
+        total: total,
+        delivery_time: '35-45 minutes',
+        source: 'MFC Website'
+      };
+
+      // Send to Make.com webhook (does not block WhatsApp)
+      fetch(MAKE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      }).then(function(res) {
+        console.log('Make.com webhook status:', res.status);
+      }).catch(function(err) {
+        console.error('Make.com webhook error:', err);
+      });
+
       const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(msg);
       window.open(url, '_blank');
 
@@ -822,19 +862,19 @@
     function renderCategories() {
       const cats = [
         { key: 'all', label: 'All', img: 'assets/logo.png' },
-        { key: 'bbq', label: 'BBQ', img: 'assets/sizzling-bbq.jpg' },
+        { key: 'bbq', label: 'BBQ', img: 'assets/cat-bbq.jpg' },
         { key: 'burger', label: 'Burgers', img: 'assets/burger-new.jpg' },
-        { key: 'sandwich', label: 'Sandwich', img: 'assets/sandwich.png' },
+        { key: 'sandwich', label: 'Sandwich', img: 'assets/cat-sandwich.jpg' },
         { key: 'pizza', label: 'Pizza', img: 'assets/pizza-new.jpg' },
         { key: 'chinese', label: 'Chinese', img: 'assets/chinese-rice.jpg' },
         { key: 'karahi', label: 'Karahi', img: 'assets/karahi1.jpg' },
         { key: 'pasta', label: 'Pasta', img: 'assets/pasta2.jpg' },
         { key: 'handi', label: 'Handi', img: 'assets/karahi2.jpg' },
         { key: 'roll', label: 'Rolls', img: 'assets/roll.jpg' },
-        { key: 'broast', label: 'Broast', img: 'assets/broast.png' },
-        { key: 'fries', label: 'Fries', img: 'assets/deal9.jpg' },
-        { key: 'platter', label: 'Platters', img: 'assets/platter.png' },
-        { key: 'extras', label: 'Extras', img: 'assets/extras.png' },
+        { key: 'broast', label: 'Broast', img: 'assets/cat-broast.jpg' },
+        { key: 'fries', label: 'Fries', img: 'assets/fries-cat.jpg' },
+        { key: 'platter', label: 'Platters', img: 'assets/cat-platter.jpg' },
+        { key: 'extras', label: 'Extras', img: 'assets/cat-extras.jpg' },
       ];
 
       document.getElementById('category-buttons').innerHTML = cats.map(c => `
